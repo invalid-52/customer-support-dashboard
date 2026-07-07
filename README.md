@@ -175,10 +175,6 @@ customer-support-dashboard/
 
 ---
 
-# 📸 Screenshots
-
-> *(Add screenshots of each major dashboard section)*
-
 * Trust Command Center
 * Sentiment Intelligence Dashboard
 * Omni-Channel Operations
