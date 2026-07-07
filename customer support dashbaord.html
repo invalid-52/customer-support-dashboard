@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>APEX CX | Customer Experience Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #030508;
+  --surface: rgba(8,12,20,0.88);
+  --surface2: rgba(10,15,25,0.94);
+  --teal: #00d4aa;
+  --cyan: #22d3ee;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --violet: #7c3aed;
+  --amber: #f59e0b;
+  --gold: #eab308;
+  --red: #ef4444;
+  --orange: #f97316;
+  --green: #10b981;
+  --pink: #ec4899;
+  --border: rgba(255,255,255,0.06);
+  --border-teal: rgba(0,212,170,0.3);
+  --text: #e2e8f0;
+  --text2: #475569;
+  --text3: #94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{color:var(--text);font-family:'Outfit',sans-serif;cursor:crosshair;}
+.syne{font-family:'Syne',sans-serif;}
+.mono{font-family:'DM Mono',monospace;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(0,212,170,0.25);border-radius:2px;}
+
+/* ── PRELOADER ── */
+#preloader{position:fixed;inset:0;background:#000;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+.scan-line{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--teal),transparent);top:0;animation:scan 2.8s infinite linear;box-shadow:0 0 24px var(--teal);}
+@keyframes scan{from{top:0}to{top:100%}}
+.pre-ring{width:96px;height:96px;border-radius:50%;border:1px solid rgba(0,212,170,0.15);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:2.5rem;}
+.pre-ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;border-top-color:var(--teal);animation:spin 1.2s linear infinite;}
+.pre-ring::after{content:'';position:absolute;inset:8px;border-radius:50%;border:1px solid transparent;border-bottom-color:var(--purple);animation:spin 2s linear infinite reverse;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pre-core{width:48px;height:48px;background:radial-gradient(circle,var(--teal),#065f46);border-radius:50%;box-shadow:0 0 40px var(--teal);}
+.pre-title{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:.4em;text-transform:uppercase;background:linear-gradient(90deg,var(--teal),var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem;}
+.pre-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--teal);letter-spacing:.6em;text-transform:uppercase;opacity:.7;margin-bottom:2rem;}
+.pre-bar-wrap{width:300px;height:2px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden;}
+.pre-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .04s;box-shadow:0 0 10px var(--teal);}
+.pre-status{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text2);letter-spacing:.15em;margin-top:.8rem;}
+
+/* ── BACKGROUND ── */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.4;}
+.cursor-glow{width:600px;height:600px;background:radial-gradient(circle,rgba(0,212,170,.06) 0%,transparent 70%);position:fixed;pointer-events:none;z-index:1;transform:translate(-50%,-50%);transition:transform .04s;}
+
+/* ── APP ── */
+#app{display:flex;height:100vh;width:100vw;opacity:0;position:relative;z-index:10;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;background:var(--surface2);backdrop-filter:blur(36px);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;flex-shrink:0;z-index:50;transition:width .2s;}
+.sidebar.mini{width:56px;}
+.sidebar.mini .nav-text,.sidebar.mini .nav-badge,.sidebar.mini .s-section,.sidebar.mini .logo-text,.sidebar.mini .status-txt{display:none;}
+.sidebar-head{padding:1.8rem 1.3rem 1rem;}
+.sidebar-logo{display:flex;align-items:center;gap:12px;margin-bottom:2rem;}
+.logo-hex{width:38px;height:38px;background:linear-gradient(135deg,rgba(0,212,170,.15),rgba(139,92,246,.1));border:1px solid rgba(0,212,170,.3);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;}
+.logo-hex::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--teal),var(--purple));opacity:.1;}
+.logo-inner{font-size:1.1rem;}
+.logo-text{display:flex;flex-direction:column;}
+.logo-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-.3px;background:linear-gradient(90deg,var(--teal),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-tagline{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--text2);letter-spacing:.18em;text-transform:uppercase;}
+.s-section{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.28em;color:rgba(255,255,255,.18);padding:.5rem .9rem .3rem;margin-top:.3rem;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:.55rem .9rem;margin:1px .3rem;border-radius:10px;cursor:pointer;transition:all .18s;color:var(--text2);white-space:nowrap;overflow:hidden;position:relative;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.nav-item.on{color:var(--teal);background:rgba(0,212,170,.08);border-right:2px solid var(--teal);box-shadow:inset -10px 0 18px -10px rgba(0,212,170,.25);}
+.nav-icon{font-size:.85rem;flex-shrink:0;width:18px;text-align:center;}
+.nav-text{font-size:.75rem;font-weight:600;letter-spacing:.01em;}
+.nav-badge{margin-left:auto;padding:1px 5px;border-radius:8px;font-size:.56rem;font-weight:700;background:var(--red);color:#fff;flex-shrink:0;}
+.nav-badge.amber{background:var(--amber);color:#000;}
+.nav-badge.teal{background:var(--teal);color:#000;}
+.sidebar-foot{margin-top:auto;padding:1rem 1.1rem;border-top:1px solid var(--border);}
+.status-pill{background:rgba(0,212,170,.04);border:1px solid rgba(0,212,170,.1);padding:.65rem;border-radius:10px;display:flex;align-items:center;gap:8px;}
+.status-dot{width:7px;height:7px;background:var(--teal);border-radius:50%;animation:pdot 1.4s infinite;flex-shrink:0;box-shadow:0 0 8px var(--teal);}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+.status-txt{display:flex;flex-direction:column;}
+.s-t{font-size:.65rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;}
+.s-s{font-family:'DM Mono',monospace;font-size:.56rem;color:var(--text2);}
+
+/* ── MAIN ── */
+.main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:54px;background:var(--surface2);backdrop-filter:blur(36px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.8rem;gap:.9rem;flex-shrink:0;z-index:40;}
+.tb-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;}
+.tb-sep{flex:1;}
+.tb-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.tb-ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green);}
+.tb-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--amber);}
+.tbtn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:5px 13px;border-radius:20px;cursor:pointer;font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;gap:5px;transition:all .18s;}
+.tbtn:hover{border-color:var(--teal);color:var(--text);}
+.tbtn.acc{background:linear-gradient(135deg,var(--teal),var(--cyan));color:#000;border:none;font-weight:800;box-shadow:0 0 24px rgba(0,212,170,.4);}
+.tbtn.ai-btn{background:linear-gradient(135deg,var(--violet),var(--purple));color:#fff;border:none;font-weight:800;box-shadow:0 0 24px rgba(139,92,246,.4);}
+.tbtn.acc:hover,.tbtn.ai-btn:hover{transform:scale(1.04);}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;cursor:pointer;border:2px solid rgba(0,212,170,.25);}
+.top-clock{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--text2);}
+.notif-wrap{position:relative;}
+.notif-btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:10px;cursor:pointer;font-size:.85rem;position:relative;}
+.notif-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--red);border-radius:50%;font-size:.5rem;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:1.8rem;position:relative;z-index:10;}
+.view{display:none;animation:viewIn .3s ease both;}
+.view.on{display:block;}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARD ── */
+.card{background:var(--surface);backdrop-filter:blur(32px);border:1px solid var(--border);border-radius:20px;padding:1.5rem;position:relative;overflow:hidden;transition:border-color .22s,box-shadow .22s,transform .22s;}
+.card:hover{border-color:rgba(0,212,170,.2);box-shadow:0 0 36px rgba(0,212,170,.07);transform:translateY(-1px);}
+.card-sm{padding:1rem;}
+.card-glow::before{content:'';position:absolute;top:-50px;right:-50px;width:140px;height:140px;border-radius:50%;filter:blur(40px);opacity:.08;pointer-events:none;}
+.cg-teal::before{background:var(--teal);}
+.cg-purple::before{background:var(--purple);}
+.cg-red::before{background:var(--red);}
+.cg-amber::before{background:var(--amber);}
+.cg-blue::before{background:var(--blue);}
+
+/* ── TYPOGRAPHY ── */
+.page-title{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:.4rem;}
+.page-sub{font-family:'DM Mono',monospace;font-size:.64rem;color:var(--text2);text-transform:uppercase;letter-spacing:.3em;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
+.st{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.accent-bar{width:3px;height:16px;border-radius:2px;background:linear-gradient(180deg,var(--teal),var(--cyan));box-shadow:0 0 8px var(--teal);}
+.sa{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;}
+
+/* ── GRID ── */
+.g{display:grid;gap:1rem;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g5{grid-template-columns:repeat(5,1fr);}
+.g31{grid-template-columns:3fr 1fr;}
+.g21{grid-template-columns:2fr 1fr;}
+.g12{grid-template-columns:1fr 2fr;}
+@media(max-width:1300px){.g4,.g5{grid-template-columns:repeat(2,1fr)}.g31,.g21,.g12{grid-template-columns:1fr}}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ── KPI ── */
+.kpi-hero{font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;line-height:1;background:linear-gradient(to bottom,#ffffff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.kpi-teal{background:linear-gradient(135deg,var(--teal),var(--cyan));-webkit-background-clip:text;}
+.kpi-green{background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;}
+.kpi-red{background:linear-gradient(135deg,var(--red),var(--orange));-webkit-background-clip:text;}
+.kpi-amber{background:linear-gradient(135deg,var(--amber),var(--gold));-webkit-background-clip:text;}
+.kpi-purple{background:linear-gradient(135deg,var(--violet),var(--purple));-webkit-background-clip:text;}
+.kpi-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--text2);margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;}
+.kpi-trend{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:20px;}
+.trend-up{background:rgba(16,185,129,.12);color:var(--green);}
+.trend-dn{background:rgba(239,68,68,.12);color:var(--red);}
+.trend-flat{background:rgba(245,158,11,.1);color:var(--amber);}
+.kpi-sub{font-size:.65rem;color:var(--text2);margin-top:.3rem;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+.b-teal{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.2);color:var(--teal);}
+.b-red{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red);}
+.b-amber{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber);}
+.b-purple{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);color:var(--purple);}
+.b-blue{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue);}
+.dp{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dt{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.dr{background:var(--red);box-shadow:0 0 6px var(--red);}
+.da{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dg{background:var(--green);box-shadow:0 0 6px var(--green);}
+.dp2{background:var(--purple);box-shadow:0 0 6px var(--purple);}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+.pf-teal{background:linear-gradient(90deg,var(--teal),var(--cyan));}
+.pf-red{background:linear-gradient(90deg,var(--red),var(--orange));}
+.pf-amber{background:linear-gradient(90deg,var(--amber),var(--gold));}
+.pf-purple{background:linear-gradient(90deg,var(--violet),var(--purple));}
+.pf-blue{background:linear-gradient(90deg,var(--blue),var(--cyan));}
+
+/* ── LIVE METRIC ROW ── */
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border);}
+.metric-row:last-child{border-bottom:none;}
+.mr-left{display:flex;align-items:center;gap:8px;}
+.mr-icon{font-size:.85rem;}
+.mr-name{font-size:.75rem;font-weight:600;color:var(--text);}
+.mr-sub{font-size:.6rem;color:var(--text2);}
+.mr-val{font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;}
+
+/* ── TRUST SCORE RING ── */
+.trust-ring-wrap{display:flex;align-items:center;justify-content:center;position:relative;}
+.trust-label{position:absolute;text-align:center;}
+.trust-score{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--teal);}
+.trust-unit{font-size:.6rem;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;}
+
+/* ── SENTIMENT WAVE ── */
+.wave-canvas{width:100%;height:80px;opacity:.9;}
+
+/* ── CHANNEL CARDS ── */
+.ch-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:.8rem;transition:all .2s;}
+.ch-card:hover{border-color:rgba(0,212,170,.15);background:rgba(0,212,170,.03);}
+.ch-head{display:flex;align-items:center;gap:.6rem;}
+.ch-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.ch-title{font-size:.78rem;font-weight:700;}
+.ch-queue{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;}
+
+/* ── LIFECYCLE ── */
+.lifecycle-stage{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:16px;padding:1rem;transition:all .25s;cursor:pointer;position:relative;overflow:hidden;}
+.lifecycle-stage:hover{border-color:rgba(0,212,170,.25);transform:translateY(-2px);}
+.lifecycle-stage.active-stage{border-color:var(--teal);box-shadow:0 0 20px rgba(0,212,170,.12);}
+.lifecycle-stage::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 16px 16px;}
+.ls-healthy::after{background:linear-gradient(90deg,var(--teal),var(--cyan));}
+.ls-warn::after{background:linear-gradient(90deg,var(--amber),var(--gold));}
+.ls-risk::after{background:linear-gradient(90deg,var(--red),var(--orange));}
+.ls-icon{font-size:1.4rem;margin-bottom:.5rem;}
+.ls-name{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;margin-bottom:.3rem;}
+.ls-trust{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;}
+.ls-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);z-index:2;color:var(--text2);font-size:.7rem;}
+
+/* ── MAP ── */
+.map-wrap{position:relative;background:rgba(0,212,170,.02);border-radius:16px;overflow:hidden;aspect-ratio:2.2;}
+.map-svg{width:100%;height:100%;}
+.region-dot{cursor:pointer;transition:r .2s;}
+.region-label{font-size:8px;fill:rgba(255,255,255,.5);font-family:'DM Mono',monospace;}
+@keyframes pulse-r{0%,100%{opacity:.8;r:6}50%{opacity:.3;r:9}}
+.pulse-region{animation:pulse-r 2s infinite;}
+
+/* ── ESCALATION ── */
+.esc-item{display:flex;align-items:flex-start;gap:.8rem;padding:.8rem;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;transition:all .2s;margin-bottom:.6rem;}
+.esc-item:hover{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.03);}
+.esc-item.critical{border-color:rgba(239,68,68,.25);}
+.esc-item.warning{border-color:rgba(245,158,11,.2);}
+.esc-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px;}
+.esc-body{flex:1;}
+.esc-name{font-size:.78rem;font-weight:700;}
+.esc-detail{font-size:.65rem;color:var(--text2);margin-top:2px;}
+.esc-meta{display:flex;gap:.4rem;align-items:center;margin-top:.4rem;}
+.churn-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:.4rem;}
+.cb-fill{height:100%;border-radius:2px;}
+
+/* ── AI PANEL ── */
+.ai-insight{background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(139,92,246,.04));border:1px solid rgba(139,92,246,.2);border-radius:14px;padding:1rem;margin-bottom:.7rem;transition:all .2s;}
+.ai-insight:hover{border-color:rgba(139,92,246,.35);transform:translateX(2px);}
+.ai-insight-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;}
+.ai-tag{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:1px 6px;border-radius:20px;}
+.ai-tag-crit{background:rgba(239,68,68,.15);color:var(--red);}
+.ai-tag-warn{background:rgba(245,158,11,.15);color:var(--amber);}
+.ai-tag-info{background:rgba(59,130,246,.15);color:var(--blue);}
+.ai-tag-ai{background:rgba(139,92,246,.15);color:var(--purple);}
+.ai-text{font-size:.75rem;line-height:1.6;color:var(--text3);}
+.ai-text strong{color:var(--text);}
+.ai-think span{width:6px;height:6px;background:var(--purple);border-radius:50%;display:inline-block;margin:0 2px;animation:think .8s infinite;}
+.ai-think span:nth-child(2){animation-delay:.15s;}
+.ai-think span:nth-child(3){animation-delay:.3s;}
+@keyframes think{0%,80%,100%{transform:scale(0.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* ── SIMULATION ── */
+.sim-slider-wrap{margin-bottom:1rem;}
+.sim-label{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2);margin-bottom:.4rem;}
+.sim-label span:last-child{font-family:'DM Mono',monospace;color:var(--teal);}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:rgba(255,255,255,.06);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--teal);cursor:pointer;box-shadow:0 0 8px var(--teal);}
+.sim-output{background:rgba(0,212,170,.03);border:1px solid rgba(0,212,170,.12);border-radius:14px;padding:1rem;margin-top:1rem;}
+.sim-metric{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border);}
+.sim-metric:last-child{border-bottom:none;}
+.sm-name{font-size:.72rem;color:var(--text2);}
+.sm-delta{font-family:'DM Mono',monospace;font-size:.75rem;font-weight:500;}
+.sm-neg{color:var(--red);}
+.sm-pos{color:var(--green);}
+
+/* ── TOAST ── */
+#toastWrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;}
+.toast{background:var(--surface2);backdrop-filter:blur(20px);border:1px solid var(--border);border-left-width:3px;border-radius:10px;padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.72rem;min-width:220px;animation:toastIn .25s ease;}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── WORLD MAP (SVG) ── */
+.heat-zone{transition:opacity .3s,filter .3s;}
+.heat-zone:hover{opacity:1!important;filter:brightness(1.4)!important;cursor:pointer;}
+
+/* ── HERO TRUST SECTION ── */
+.hero-grid{display:grid;grid-template-columns:1fr 320px;gap:1rem;margin-bottom:1rem;}
+@media(max-width:1200px){.hero-grid{grid-template-columns:1fr;}}
+
+/* ── ANIMATED COUNTER ── */
+.counter{transition:all .5s;}
+
+/* ── SECTION DIVIDER ── */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:1.5rem 0;}
+</style>
+</head>
+<body>
+
+<div id="preloader">
+  <div class="scan-line"></div>
+  <div class="pre-ring"><div class="pre-core"></div></div>
+  <div class="pre-title">APEX CX</div>
+  <div class="pre-sub">Customer Experience Intelligence</div>
+  <div class="pre-bar-wrap"><div class="pre-bar" id="preBar"></div></div>
+  <div class="pre-status" id="preStatus">Initializing trust intelligence engines…</div>
+</div>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="toastWrap"></div>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-logo">
+        <div class="logo-hex"><div class="logo-inner">🔮</div></div>
+        <div class="logo-text">
+          <div class="logo-name">APEX CX</div>
+          <div class="logo-tagline">Intelligence Platform</div>
+        </div>
+      </div>
+      <div class="s-section">Command</div>
+      <div class="nav-item on" onclick="nav('command',this)" data-p="command">
+        <div class="nav-icon">🌐</div><div class="nav-text">Trust Command Center</div>
+      </div>
+      <div class="nav-item" onclick="nav('sentiment',this)" data-p="sentiment">
+        <div class="nav-icon">🧠</div><div class="nav-text">Sentiment Intelligence</div><div class="nav-badge amber">!</div>
+      </div>
+      <div class="nav-item" onclick="nav('omni',this)" data-p="omni">
+        <div class="nav-icon">📡</div><div class="nav-text">Omni-Channel Ops</div><div class="nav-badge">14</div>
+      </div>
+      <div class="s-section">Intelligence</div>
+      <div class="nav-item" onclick="nav('lifecycle',this)" data-p="lifecycle">
+        <div class="nav-icon">🔄</div><div class="nav-text">Lifecycle Intelligence</div>
+      </div>
+      <div class="nav-item" onclick="nav('map',this)" data-p="map">
+        <div class="nav-icon">🗺️</div><div class="nav-text">Global Health Map</div>
+      </div>
+      <div class="nav-item" onclick="nav('escalation',this)" data-p="escalation">
+        <div class="nav-icon">⚡</div><div class="nav-text">Escalation & Churn</div><div class="nav-badge">7</div>
+      </div>
+      <div class="s-section">AI Systems</div>
+      <div class="nav-item" onclick="nav('copilot',this)" data-p="copilot">
+        <div class="nav-icon">🤖</div><div class="nav-text">AI Copilot Panel</div><div class="nav-badge teal">NEW</div>
+      </div>
+      <div class="nav-item" onclick="nav('simulation',this)" data-p="simulation">
+        <div class="nav-icon">🧪</div><div class="nav-text">Journey Simulation Lab</div>
+      </div>
+    </div>
+    <div class="sidebar-foot">
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <div class="status-txt">
+          <div class="s-t">AI Online</div>
+          <div class="s-s">42K events/s · 99.97% uptime</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <button class="tbtn" onclick="toggleSidebar()">☰</button>
+      <div class="tb-title" id="tbTitle">Trust Command Center</div>
+      <div class="tb-sep"></div>
+      <div class="tb-badge tb-ok"><span class="dp dg"></span> Systems Nominal</div>
+      <div class="tb-badge tb-warn"><span class="dp da"></span> 3 Escalations</div>
+      <div class="top-clock" id="topClock">--:--:--</div>
+      <button class="tbtn ai-btn" onclick="runAICopilot()">✦ AI Insights</button>
+      <button class="tbtn acc" onclick="exportReport()">↓ Export</button>
+      <div class="avatar">AX</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ═══════════════ VIEW: COMMAND ═══════════════ -->
+      <div class="view on" id="v-command">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Global Trust <span style="background:linear-gradient(90deg,var(--teal),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Command Center</span></div>
+          <div class="page-sub">Real-time customer intelligence · Mission control for trust & retention</div>
+        </div>
+
+        <!-- HERO GRID -->
+        <div class="hero-grid">
+          <!-- LEFT: KPI ROW + CHARTS -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="g5" style="gap:.8rem;">
+              <div class="card card-glow cg-teal card-sm">
+                <div class="kpi-label">Trust Score <span class="kpi-trend trend-up">↑ 2.1%</span></div>
+                <div class="kpi-hero kpi-teal" id="kpi-trust">94.2</div>
+                <div class="kpi-sub">Global avg · last 24h</div>
+              </div>
+              <div class="card card-glow cg-purple card-sm">
+                <div class="kpi-label">CSAT Score <span class="kpi-trend trend-up">↑ 0.4</span></div>
+                <div class="kpi-hero kpi-purple">4.7<span style="font-size:1rem;"> /5</span></div>
+                <div class="kpi-sub">87,432 responses</div>
+              </div>
+              <div class="card card-glow cg-red card-sm">
+                <div class="kpi-label">Churn Risk <span class="kpi-trend trend-dn">↑ 3.2%</span></div>
+                <div class="kpi-hero kpi-red">6.8<span style="font-size:1rem;">%</span></div>
+                <div class="kpi-sub">High-value segment</div>
+              </div>
+              <div class="card card-glow cg-amber card-sm">
+                <div class="kpi-label">Active Escalations <span class="kpi-trend trend-flat">= flat</span></div>
+                <div class="kpi-hero kpi-amber">3</div>
+                <div class="kpi-sub">7 resolved today</div>
+              </div>
+              <div class="card card-glow cg-blue card-sm">
+                <div class="kpi-label">SLA Compliance <span class="kpi-trend trend-up">↑ 1.1%</span></div>
+                <div class="kpi-hero kpi-teal">98.4<span style="font-size:1rem;">%</span></div>
+                <div class="kpi-sub">Target: 98%</div>
+              </div>
+            </div>
+
+            <div class="g2">
+              <div class="card">
+                <div class="sh"><div class="st"><div class="accent-bar"></div>Sentiment Pulse — 24h</div><div class="sa"><div class="badge b-teal"><span class="dp dt"></span> Live</div></div></div>
+                <canvas id="sentimentPulse" height="120"></canvas>
+              </div>
+              <div class="card">
+                <div class="sh"><div class="st"><div class="accent-bar"></div>Churn Risk Trend</div><div class="badge b-amber">7d Rolling</div></div>
+                <canvas id="churnTrend" height="120"></canvas>
+              </div>
+            </div>
+
+            <div class="g3">
+              <div class="card card-sm">
+                <div class="kpi-label" style="margin-bottom:.6rem;">Retention Health</div>
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                  <div class="kpi-hero kpi-green" style="font-size:1.6rem;">91.2%</div>
+                  <div class="badge b-teal">Healthy</div>
+                </div>
+                <div class="progress-wrap"><div class="progress-fill pf-teal" style="width:91.2%"></div></div>
+                <div class="kpi-sub" style="margin-top:.4rem;">Target: 90% · +1.2pp</div>
+              </div>
+              <div class="card card-sm">
+                <div class="kpi-label" style="margin-bottom:.6rem;">Support Pressure</div>
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                  <div class="kpi-hero kpi-amber" style="font-size:1.6rem;">73%</div>
+                  <div class="badge b-amber">Moderate</div>
+                </div>
+                <div class="progress-wrap"><div class="progress-fill pf-amber" style="width:73%"></div></div>
+                <div class="kpi-sub" style="margin-top:.4rem;">2,847 tickets in queue</div>
+              </div>
+              <div class="card card-sm">
+                <div class="kpi-label" style="margin-bottom:.6rem;">Avg Response Time</div>
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                  <div class="kpi-hero kpi-teal" style="font-size:1.6rem;">4m 12s</div>
+                  <div class="badge b-teal">On Track</div>
+                </div>
+                <div class="progress-wrap"><div class="progress-fill pf-teal" style="width:65%"></div></div>
+                <div class="kpi-sub" style="margin-top:.4rem;">SLA target: &lt;8 min</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: TRUST RING + LIVE FEED -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="card" style="text-align:center;">
+              <div class="kpi-label" style="justify-content:center;margin-bottom:1rem;">Global Trust Index</div>
+              <div class="trust-ring-wrap">
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                  <defs>
+                    <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#00d4aa"/>
+                      <stop offset="100%" stop-color="#22d3ee"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/>
+                  <circle cx="80" cy="80" r="68" fill="none" stroke="url(#tg)" stroke-width="12" stroke-linecap="round"
+                    stroke-dasharray="427" stroke-dashoffset="25" stroke-dasharray="402.124"
+                    transform="rotate(-90 80 80)" id="trustRingFill"/>
+                  <circle cx="80" cy="80" r="52" fill="none" stroke="rgba(0,212,170,0.06)" stroke-width="1"/>
+                </svg>
+                <div class="trust-label">
+                  <div class="trust-score" id="trustRingVal">94.2</div>
+                  <div class="trust-unit">Trust Index</div>
+                </div>
+              </div>
+              <div class="g2" style="gap:.5rem;margin-top:1rem;">
+                <div style="text-align:left;padding:.6rem;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid var(--border);">
+                  <div style="font-size:.58rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.2rem;">Enterprise</div>
+                  <div class="mono" style="font-size:.9rem;color:var(--teal);">96.8</div>
+                </div>
+                <div style="text-align:left;padding:.6rem;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid var(--border);">
+                  <div style="font-size:.58rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.2rem;">SMB</div>
+                  <div class="mono" style="font-size:.9rem;color:var(--cyan);">91.4</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="flex:1;">
+              <div class="sh"><div class="st"><div class="accent-bar"></div>Live Intelligence Feed</div><div class="badge b-teal"><span class="dp dt"></span> Live</div></div>
+              <div id="liveFeed" style="display:flex;flex-direction:column;gap:.5rem;max-height:260px;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI GENERATED INSIGHTS ROW -->
+        <div class="card" style="background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(0,212,170,.03));border-color:rgba(139,92,246,.2);">
+          <div class="sh">
+            <div class="st"><span style="font-size:1rem;">✦</span> AI-Generated Intelligence Summary</div>
+            <div class="badge b-purple">Auto-refreshed 2 min ago</div>
+          </div>
+          <div class="g3">
+            <div class="ai-insight">
+              <div class="ai-insight-head"><div class="ai-tag ai-tag-crit">Critical</div><span style="font-size:.62rem;color:var(--text2);">Retention Risk</span></div>
+              <div class="ai-text">Enterprise segment showing <strong>18% sentiment decline</strong> post-logistics update. Churn probability elevated for 23 accounts in APAC.</div>
+            </div>
+            <div class="ai-insight">
+              <div class="ai-insight-head"><div class="ai-tag ai-tag-warn">Warning</div><span style="font-size:.62rem;color:var(--text2);">Support Overload</span></div>
+              <div class="ai-text">Live chat queue exceeding SLA thresholds. <strong>Recommend reallocating 4 agents</strong> from email to chat for next 2 hours.</div>
+            </div>
+            <div class="ai-insight">
+              <div class="ai-insight-head"><div class="ai-tag ai-tag-info">Insight</div><span style="font-size:.62rem;color:var(--text2);">Opportunity</span></div>
+              <div class="ai-text">Proactive outreach to at-risk cohort could <strong>recover $1.2M ARR</strong>. NPS detractors responding 3× faster to video calls vs email.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: SENTIMENT ═══════════════ -->
+      <div class="view" id="v-sentiment">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Sentiment <span style="background:linear-gradient(90deg,var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Intelligence Engine</span></div>
+          <div class="page-sub">AI emotion analysis · behavioral insights · anomaly detection</div>
+        </div>
+
+        <div class="g4" style="margin-bottom:1rem;">
+          <div class="card card-sm card-glow cg-teal">
+            <div class="kpi-label">Positive Sentiment</div>
+            <div class="kpi-hero kpi-teal">67.3<span style="font-size:1rem;">%</span></div>
+            <div class="kpi-sub">↑ 4.2% vs last week</div>
+          </div>
+          <div class="card card-sm card-glow cg-amber">
+            <div class="kpi-label">Neutral</div>
+            <div class="kpi-hero kpi-amber">21.1<span style="font-size:1rem;">%</span></div>
+            <div class="kpi-sub">Stable trend</div>
+          </div>
+          <div class="card card-sm card-glow cg-red">
+            <div class="kpi-label">Negative Sentiment</div>
+            <div class="kpi-hero kpi-red">11.6<span style="font-size:1rem;">%</span></div>
+            <div class="kpi-sub">↑ 1.8% — Monitoring</div>
+          </div>
+          <div class="card card-sm card-glow cg-purple">
+            <div class="kpi-label">Frustration Spikes</div>
+            <div class="kpi-hero kpi-purple">4</div>
+            <div class="kpi-sub">In last 6 hours</div>
+          </div>
+        </div>
+
+        <div class="g2" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Emotional Trend (30 days)</div><div class="badge b-purple">AI Analyzed</div></div>
+            <canvas id="emotionTrend" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Sentiment by Channel</div></div>
+            <canvas id="sentimentChannel" height="160"></canvas>
+          </div>
+        </div>
+
+        <div class="g21" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Sentiment Waveform — Real-time</div><div class="badge b-teal"><span class="dp dt"></span> Live Processing</div></div>
+            <canvas id="waveformCanvas" class="wave-canvas" height="100"></canvas>
+            <div style="display:flex;justify-content:space-between;margin-top:.8rem;font-size:.6rem;color:var(--text2);font-family:'DM Mono',monospace;">
+              <span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span><span>Now</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Anomaly Detection</div></div>
+            <div style="display:flex;flex-direction:column;gap:.6rem;">
+              <div class="metric-row">
+                <div class="mr-left"><div class="mr-icon">🔴</div><div><div class="mr-name">APAC Frustration Spike</div><div class="mr-sub">Logistics-linked · 73 users</div></div></div>
+                <div class="mr-val" style="color:var(--red);">9.4</div>
+              </div>
+              <div class="metric-row">
+                <div class="mr-left"><div class="mr-icon">🟡</div><div><div class="mr-name">EU Onboarding Friction</div><div class="mr-sub">Product tour drop-off</div></div></div>
+                <div class="mr-val" style="color:var(--amber);">6.7</div>
+              </div>
+              <div class="metric-row">
+                <div class="mr-left"><div class="mr-icon">🟡</div><div><div class="mr-name">Billing Confusion Spike</div><div class="mr-sub">Invoice-related queries ↑</div></div></div>
+                <div class="mr-val" style="color:var(--amber);">5.9</div>
+              </div>
+              <div class="metric-row">
+                <div class="mr-left"><div class="mr-icon">🟢</div><div><div class="mr-name">Feature Launch Reception</div><div class="mr-sub">Very positive — v4.2</div></div></div>
+                <div class="mr-val" style="color:var(--green);">2.1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sh"><div class="st"><div class="accent-bar"></div>AI Behavioral Insights</div><div class="badge b-purple">✦ GPT-4 Powered</div></div>
+          <div class="g3">
+            <div class="ai-insight">
+              <div class="ai-insight-head"><div class="ai-tag ai-tag-crit">Critical Pattern</div></div>
+              <div class="ai-text"><strong>Negative sentiment increased 18%</strong> after logistics delays in the last 72 hours. Concentrated in SMB segment, APAC region. Escalation tone detected in 34 tickets.</div>
+            </div>
+            <div class="ai-insight">
+              <div class="ai-insight-head"><div class="ai-tag ai-tag-warn">Trend Alert</div></div>
+              <div class="ai-text"><strong>Enterprise onboarding frustration rising</strong> in APAC region. Average time-to-value extended by 2.3 days vs Q3 baseline. Recommend dedicated CSM outreach.</div>
+            </div>
+            <div class="ai-insight">
+              <div class="ai-insight-head"><div class="ai-tag ai-tag-ai">Predictive</div></div>
+              <div class="ai-text">Satisfaction patterns suggest <strong>Q4 NPS will reach 68</strong> if current trajectory holds. Proactive intervention on detractors could push to 74+.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: OMNI ═══════════════ -->
+      <div class="view" id="v-omni">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Omni-Channel <span style="background:linear-gradient(90deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Support Operations</span></div>
+          <div class="page-sub">Live queues · response pressure · load balancing · SLA monitoring</div>
+        </div>
+
+        <div class="g5" style="margin-bottom:1rem;">
+          <div class="ch-card">
+            <div class="ch-head">
+              <div class="ch-icon" style="background:rgba(59,130,246,.12);">📧</div>
+              <div><div class="ch-title">Email Support</div><div class="badge b-teal"><span class="dp dt"></span> Active</div></div>
+            </div>
+            <div class="ch-queue" style="color:var(--blue);">847</div>
+            <div style="font-size:.62rem;color:var(--text2);">In queue · Avg wait: 4h 12m</div>
+            <div class="progress-wrap" style="margin-top:.4rem;"><div class="progress-fill pf-blue" style="width:68%;"></div></div>
+            <div style="font-size:.6rem;color:var(--text2);margin-top:.3rem;">68% capacity</div>
+          </div>
+          <div class="ch-card" style="border-color:rgba(239,68,68,.25);">
+            <div class="ch-head">
+              <div class="ch-icon" style="background:rgba(239,68,68,.12);">💬</div>
+              <div><div class="ch-title">Live Chat</div><div class="badge b-red"><span class="dp dr"></span> Overload</div></div>
+            </div>
+            <div class="ch-queue" style="color:var(--red);">234</div>
+            <div style="font-size:.62rem;color:var(--text2);">In queue · Avg wait: 18m</div>
+            <div class="progress-wrap" style="margin-top:.4rem;"><div class="progress-fill pf-red" style="width:94%;"></div></div>
+            <div style="font-size:.6rem;color:var(--red);margin-top:.3rem;">⚠ 94% capacity · SLA at risk</div>
+          </div>
+          <div class="ch-card">
+            <div class="ch-head">
+              <div class="ch-icon" style="background:rgba(0,212,170,.12);">📞</div>
+              <div><div class="ch-title">Voice Support</div><div class="badge b-teal"><span class="dp dt"></span> Active</div></div>
+            </div>
+            <div class="ch-queue" style="color:var(--teal);">47</div>
+            <div style="font-size:.62rem;color:var(--text2);">In queue · Avg wait: 3m 20s</div>
+            <div class="progress-wrap" style="margin-top:.4rem;"><div class="progress-fill pf-teal" style="width:52%;"></div></div>
+            <div style="font-size:.6rem;color:var(--text2);margin-top:.3rem;">52% capacity</div>
+          </div>
+          <div class="ch-card">
+            <div class="ch-head">
+              <div class="ch-icon" style="background:rgba(245,158,11,.12);">📱</div>
+              <div><div class="ch-title">Social Media</div><div class="badge b-amber"><span class="dp da"></span> Monitor</div></div>
+            </div>
+            <div class="ch-queue" style="color:var(--amber);">128</div>
+            <div style="font-size:.62rem;color:var(--text2);">Mentions · Avg resp: 45m</div>
+            <div class="progress-wrap" style="margin-top:.4rem;"><div class="progress-fill pf-amber" style="width:79%;"></div></div>
+            <div style="font-size:.6rem;color:var(--text2);margin-top:.3rem;">79% capacity</div>
+          </div>
+          <div class="ch-card">
+            <div class="ch-head">
+              <div class="ch-icon" style="background:rgba(139,92,246,.12);">🤖</div>
+              <div><div class="ch-title">AI Chatbot</div><div class="badge b-purple"><span class="dp dp2"></span> Auto</div></div>
+            </div>
+            <div class="ch-queue" style="color:var(--purple);">1,847</div>
+            <div style="font-size:.62rem;color:var(--text2);">Sessions · Deflection: 74%</div>
+            <div class="progress-wrap" style="margin-top:.4rem;"><div class="progress-fill pf-purple" style="width:44%;"></div></div>
+            <div style="font-size:.6rem;color:var(--text2);margin-top:.3rem;">44% escalate to human</div>
+          </div>
+        </div>
+
+        <div class="g2" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Queue Volume — All Channels</div><div class="badge b-teal"><span class="dp dt"></span> Live</div></div>
+            <canvas id="queueVolume" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Agent Load Distribution</div></div>
+            <canvas id="agentLoad" height="160"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sh"><div class="st"><div class="accent-bar"></div>Operational Bottlenecks</div><div class="badge b-red">⚡ 2 Critical</div></div>
+          <div class="g3">
+            <div class="metric-row" style="padding:.8rem;background:rgba(239,68,68,.04);border-radius:12px;border:1px solid rgba(239,68,68,.15);">
+              <div class="mr-left"><div class="mr-icon">🔴</div><div><div class="mr-name">Live Chat Overflow</div><div class="mr-sub">94% capacity · SLA breach imminent</div></div></div>
+              <div class="badge b-red">Critical</div>
+            </div>
+            <div class="metric-row" style="padding:.8rem;background:rgba(245,158,11,.04);border-radius:12px;border:1px solid rgba(245,158,11,.15);">
+              <div class="mr-left"><div class="mr-icon">🟡</div><div><div class="mr-name">Email Backlog Growth</div><div class="mr-sub">+12% in last 2h · trending up</div></div></div>
+              <div class="badge b-amber">Warning</div>
+            </div>
+            <div class="metric-row" style="padding:.8rem;background:rgba(16,185,129,.04);border-radius:12px;border:1px solid rgba(16,185,129,.1);">
+              <div class="mr-left"><div class="mr-icon">🟢</div><div><div class="mr-name">Voice Capacity Available</div><div class="mr-sub">48% free · can absorb overflow</div></div></div>
+              <div class="badge b-teal">Healthy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: LIFECYCLE ═══════════════ -->
+      <div class="view" id="v-lifecycle">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Customer Lifecycle <span style="background:linear-gradient(90deg,var(--teal),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Intelligence</span></div>
+          <div class="page-sub">Systems-level customer intelligence · trust evolution across the journey</div>
+        </div>
+
+        <!-- LIFECYCLE STAGES -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="sh"><div class="st"><div class="accent-bar"></div>Journey Stage Overview</div><div class="badge b-teal">14,287 Active Accounts</div></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem;">
+            <div class="lifecycle-stage ls-healthy active-stage">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">01</div>
+              <div class="ls-icon">🌱</div>
+              <div class="ls-name">Lead</div>
+              <div class="ls-trust" style="color:var(--teal);">2,841</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">Converted: 34%</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-teal" style="width:34%;"></div></div>
+            </div>
+            <div class="lifecycle-stage ls-healthy">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">02</div>
+              <div class="ls-icon">🚀</div>
+              <div class="ls-name">Onboarding</div>
+              <div class="ls-trust" style="color:var(--cyan);">1,234</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">Trust: 88.4</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-teal" style="width:88%;"></div></div>
+            </div>
+            <div class="lifecycle-stage ls-healthy">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">03</div>
+              <div class="ls-icon">⚙️</div>
+              <div class="ls-name">Product Usage</div>
+              <div class="ls-trust" style="color:var(--green);">6,918</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">Trust: 93.1</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-teal" style="width:93%;"></div></div>
+            </div>
+            <div class="lifecycle-stage ls-warn">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">04</div>
+              <div class="ls-icon">🎫</div>
+              <div class="ls-name">Support Events</div>
+              <div class="ls-trust" style="color:var(--amber);">1,847</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">Trust: 74.2 ↓</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-amber" style="width:74%;"></div></div>
+            </div>
+            <div class="lifecycle-stage ls-healthy">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">05</div>
+              <div class="ls-icon">⭐</div>
+              <div class="ls-name">Satisfaction</div>
+              <div class="ls-trust" style="color:var(--teal);">9,402</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">CSAT: 4.7/5</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-teal" style="width:94%;"></div></div>
+            </div>
+            <div class="lifecycle-stage ls-healthy">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">06</div>
+              <div class="ls-icon">🔒</div>
+              <div class="ls-name">Retention</div>
+              <div class="ls-trust" style="color:var(--blue);">11,832</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">Retained: 91%</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-blue" style="width:91%;"></div></div>
+            </div>
+            <div class="lifecycle-stage ls-risk">
+              <div style="position:absolute;top:.5rem;right:.5rem;font-size:.55rem;color:var(--text2);font-family:'DM Mono',monospace;">07</div>
+              <div class="ls-icon">📈</div>
+              <div class="ls-name">Expansion</div>
+              <div class="ls-trust" style="color:var(--red);">892</div>
+              <div style="font-size:.6rem;color:var(--text2);margin-top:.2rem;">Upsell: 34% ↓</div>
+              <div class="progress-wrap" style="margin-top:.5rem;"><div class="progress-fill pf-red" style="width:34%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g2" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Lifecycle Trust Evolution</div></div>
+            <canvas id="lifecycleChart" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Friction Points by Stage</div></div>
+            <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:.3rem;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:.3rem;"><span>Onboarding — Complexity</span><span class="mono" style="color:var(--amber);">High</span></div>
+                <div class="progress-wrap"><div class="progress-fill pf-amber" style="width:72%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:.3rem;"><span>Support — Response Lag</span><span class="mono" style="color:var(--red);">Critical</span></div>
+                <div class="progress-wrap"><div class="progress-fill pf-red" style="width:89%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:.3rem;"><span>Expansion — Value Discovery</span><span class="mono" style="color:var(--amber);">Medium</span></div>
+                <div class="progress-wrap"><div class="progress-fill pf-amber" style="width:58%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:.3rem;"><span>Retention — Feature Adoption</span><span class="mono" style="color:var(--teal);">Low</span></div>
+                <div class="progress-wrap"><div class="progress-fill pf-teal" style="width:28%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sh"><div class="st"><div class="accent-bar"></div>Churn Signals by Lifecycle Stage</div><div class="badge b-red">4 At-Risk Cohorts</div></div>
+          <div class="g4">
+            <div style="padding:.8rem;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);border-radius:12px;">
+              <div style="font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Onboarding</div>
+              <div class="mono" style="font-size:1.2rem;color:var(--red);">23.4%</div>
+              <div style="font-size:.62rem;color:var(--text2);">Churn risk · Drop-off week 2</div>
+            </div>
+            <div style="padding:.8rem;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.15);border-radius:12px;">
+              <div style="font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Support Events</div>
+              <div class="mono" style="font-size:1.2rem;color:var(--amber);">18.7%</div>
+              <div style="font-size:.62rem;color:var(--text2);">Churn risk · Unresolved tickets</div>
+            </div>
+            <div style="padding:.8rem;background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.15);border-radius:12px;">
+              <div style="font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Expansion</div>
+              <div class="mono" style="font-size:1.2rem;color:var(--blue);">12.1%</div>
+              <div style="font-size:.62rem;color:var(--text2);">Churn risk · Value gap</div>
+            </div>
+            <div style="padding:.8rem;background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.1);border-radius:12px;">
+              <div style="font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Retention</div>
+              <div class="mono" style="font-size:1.2rem;color:var(--green);">4.2%</div>
+              <div style="font-size:.62rem;color:var(--text2);">Churn risk · Healthy cohort</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: MAP ═══════════════ -->
+      <div class="view" id="v-map">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Global Customer <span style="background:linear-gradient(90deg,var(--teal),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Health Map</span></div>
+          <div class="page-sub">Regional sentiment · support pressure · churn zones · escalation hotspots</div>
+        </div>
+
+        <div class="g31" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Global Sentiment & Support Pressure</div><div class="sa"><div class="badge b-teal"><span class="dp dt"></span> Live</div><div class="badge b-purple">Interactive</div></div></div>
+            <div class="map-wrap">
+              <svg class="map-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="rg-na"><stop offset="0%" stop-color="#00d4aa" stop-opacity=".5"/><stop offset="100%" stop-color="#00d4aa" stop-opacity="0"/></radialGradient>
+                  <radialGradient id="rg-eu"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".5"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></radialGradient>
+                  <radialGradient id="rg-ap"><stop offset="0%" stop-color="#ef4444" stop-opacity=".6"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></radialGradient>
+                  <radialGradient id="rg-sa"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".45"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></radialGradient>
+                  <radialGradient id="rg-af"><stop offset="0%" stop-color="#8b5cf6" stop-opacity=".35"/><stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/></radialGradient>
+                </defs>
+                <!-- World background grid -->
+                <rect width="900" height="400" fill="rgba(0,0,0,0.1)" rx="12"/>
+                <!-- Grid lines -->
+                <g stroke="rgba(255,255,255,0.03)" stroke-width="1">
+                  <line x1="0" y1="133" x2="900" y2="133"/><line x1="0" y1="266" x2="900" y2="266"/>
+                  <line x1="180" y1="0" x2="180" y2="400"/><line x1="360" y1="0" x2="360" y2="400"/><line x1="540" y1="0" x2="540" y2="400"/><line x1="720" y1="0" x2="720" y2="400"/>
+                </g>
+                <!-- Continent shapes (simplified polygons) -->
+                <!-- North America -->
+                <polygon points="80,60 220,60 250,80 240,180 200,200 160,180 100,160 70,120" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                <!-- South America -->
+                <polygon points="180,220 260,210 280,260 260,340 200,360 160,320 150,260" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                <!-- Europe -->
+                <polygon points="380,50 480,50 500,80 490,130 440,140 390,120 370,90" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                <!-- Africa -->
+                <polygon points="390,155 490,150 510,200 490,320 430,340 380,300 370,230 385,175" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                <!-- Asia -->
+                <polygon points="500,40 760,40 800,80 780,180 700,200 600,190 520,160 490,100" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                <!-- Australia -->
+                <polygon points="700,240 800,230 830,280 800,330 720,340 680,300 680,260" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+                <!-- Heat glows -->
+                <ellipse cx="160" cy="130" rx="90" ry="60" fill="url(#rg-na)" opacity=".8"/>
+                <ellipse cx="440" cy="95" rx="60" ry="45" fill="url(#rg-eu)" opacity=".9"/>
+                <ellipse cx="650" cy="120" rx="110" ry="70" fill="url(#rg-ap)" opacity=".9"/>
+                <ellipse cx="215" cy="285" rx="55" ry="50" fill="url(#rg-sa)" opacity=".7"/>
+                <ellipse cx="440" cy="240" rx="60" ry="80" fill="url(#rg-af)" opacity=".6"/>
+
+                <!-- Pulse circles with animations -->
+                <g>
+                  <!-- NA - Healthy -->
+                  <circle cx="160" cy="130" r="6" fill="#00d4aa" opacity=".9"><animate attributeName="r" values="6;10;6" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.3;.9" dur="2s" repeatCount="indefinite"/></circle>
+                  <circle cx="160" cy="130" r="3" fill="#00d4aa"/>
+                  <text x="168" y="125" class="region-label">North America</text>
+                  <text x="168" y="135" style="font-size:7px;fill:#00d4aa;font-family:'DM Mono',monospace;">Trust: 96.2 ✓</text>
+
+                  <!-- EU - Good -->
+                  <circle cx="440" cy="95" r="6" fill="#3b82f6" opacity=".9"><animate attributeName="r" values="6;9;6" dur="2.3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.3s" repeatCount="indefinite"/></circle>
+                  <circle cx="440" cy="95" r="3" fill="#3b82f6"/>
+                  <text x="448" y="90" class="region-label">Europe</text>
+                  <text x="448" y="100" style="font-size:7px;fill:#3b82f6;font-family:'DM Mono',monospace;">Trust: 93.1 ↑</text>
+
+                  <!-- APAC - Critical -->
+                  <circle cx="720" cy="130" r="8" fill="#ef4444" opacity=".9"><animate attributeName="r" values="8;14;8" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.2;.9" dur="1.5s" repeatCount="indefinite"/></circle>
+                  <circle cx="720" cy="130" r="4" fill="#ef4444"/>
+                  <text x="728" y="125" class="region-label">APAC</text>
+                  <text x="728" y="135" style="font-size:7px;fill:#ef4444;font-family:'DM Mono',monospace;">Trust: 78.4 ⚠</text>
+
+                  <!-- LATAM - Warning -->
+                  <circle cx="215" cy="285" r="5" fill="#f59e0b" opacity=".9"><animate attributeName="r" values="5;8;5" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.6s" repeatCount="indefinite"/></circle>
+                  <circle cx="215" cy="285" r="2.5" fill="#f59e0b"/>
+                  <text x="223" y="281" class="region-label">LATAM</text>
+                  <text x="223" y="291" style="font-size:7px;fill:#f59e0b;font-family:'DM Mono',monospace;">Trust: 84.7 →</text>
+
+                  <!-- AU - Good -->
+                  <circle cx="755" cy="290" r="5" fill="#10b981" opacity=".8"><animate attributeName="r" values="5;8;5" dur="3s" repeatCount="indefinite"/></circle>
+                  <circle cx="755" cy="290" r="2.5" fill="#10b981"/>
+                  <text x="762" y="286" class="region-label">Australia</text>
+                  <text x="762" y="296" style="font-size:7px;fill:#10b981;font-family:'DM Mono',monospace;">Trust: 91.8 ✓</text>
+                </g>
+
+                <!-- Legend -->
+                <g transform="translate(20,360)">
+                  <circle cx="6" cy="6" r="4" fill="#00d4aa"/><text x="14" y="10" style="font-size:7px;fill:rgba(255,255,255,.5);font-family:'DM Mono',monospace;">Healthy (90+)</text>
+                  <circle cx="86" cy="6" r="4" fill="#3b82f6"/><text x="94" y="10" style="font-size:7px;fill:rgba(255,255,255,.5);font-family:'DM Mono',monospace;">Good (85–90)</text>
+                  <circle cx="166" cy="6" r="4" fill="#f59e0b"/><text x="174" y="10" style="font-size:7px;fill:rgba(255,255,255,.5);font-family:'DM Mono',monospace;">Warning (75–85)</text>
+                  <circle cx="256" cy="6" r="4" fill="#ef4444"/><text x="264" y="10" style="font-size:7px;fill:rgba(255,255,255,.5);font-family:'DM Mono',monospace;">Critical (&lt;75)</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.8rem;">
+            <div class="card card-sm">
+              <div class="kpi-label" style="margin-bottom:.8rem;">Regional Summary</div>
+              <div class="metric-row"><div class="mr-left"><div style="width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:4px;"></div><div class="mr-name">North America</div></div><div class="mr-val" style="color:var(--teal);">96.2</div></div>
+              <div class="metric-row"><div class="mr-left"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px;"></div><div class="mr-name">Europe</div></div><div class="mr-val" style="color:var(--blue);">93.1</div></div>
+              <div class="metric-row"><div class="mr-left"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px;"></div><div class="mr-name">Australia</div></div><div class="mr-val" style="color:var(--green);">91.8</div></div>
+              <div class="metric-row"><div class="mr-left"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:4px;"></div><div class="mr-name">LATAM</div></div><div class="mr-val" style="color:var(--amber);">84.7</div></div>
+              <div class="metric-row"><div class="mr-left"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px;"></div><div class="mr-name">APAC</div></div><div class="mr-val" style="color:var(--red);">78.4</div></div>
+            </div>
+            <div class="card card-sm">
+              <div class="kpi-label" style="margin-bottom:.6rem;">Escalation Hotspots</div>
+              <div style="font-size:.72rem;line-height:1.8;color:var(--text2);">
+                <div>🔴 <strong style="color:var(--text);">APAC</strong> — Logistics delay frustration</div>
+                <div>🟡 <strong style="color:var(--text);">EU</strong> — Onboarding friction rising</div>
+                <div>🟢 <strong style="color:var(--text);">NA</strong> — All systems nominal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: ESCALATION ═══════════════ -->
+      <div class="view" id="v-escalation">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Escalation & <span style="background:linear-gradient(90deg,var(--red),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Churn Detection</span></div>
+          <div class="page-sub">High-risk customers · escalation chains · predictive churn warning system</div>
+        </div>
+
+        <div class="g4" style="margin-bottom:1rem;">
+          <div class="card card-sm card-glow cg-red">
+            <div class="kpi-label">Critical Escalations</div>
+            <div class="kpi-hero kpi-red">3</div>
+            <div class="kpi-sub">Enterprise accounts · Act now</div>
+          </div>
+          <div class="card card-sm card-glow cg-amber">
+            <div class="kpi-label">High-Risk Accounts</div>
+            <div class="kpi-hero kpi-amber">47</div>
+            <div class="kpi-sub">Churn probability &gt;65%</div>
+          </div>
+          <div class="card card-sm card-glow cg-purple">
+            <div class="kpi-label">Churn Radar Score</div>
+            <div class="kpi-hero kpi-purple">7.2</div>
+            <div class="kpi-sub">AI risk index · /10</div>
+          </div>
+          <div class="card card-sm card-glow cg-red">
+            <div class="kpi-label">ARR at Risk</div>
+            <div class="kpi-hero kpi-red">$2.4M</div>
+            <div class="kpi-sub">Next 90 days projection</div>
+          </div>
+        </div>
+
+        <div class="g21" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Active Escalation Queue</div><div class="badge b-red">7 Open</div></div>
+
+            <div class="esc-item critical">
+              <div class="esc-icon">🔴</div>
+              <div class="esc-body">
+                <div class="esc-name">Acme Corp — Enterprise (APAC)</div>
+                <div class="esc-detail">Unresolved billing dispute · 3 open tickets · CSM unresponsive · Day 8</div>
+                <div class="esc-meta"><div class="badge b-red">Critical</div><div class="badge b-purple">$180K ARR</div><span style="font-size:.58rem;color:var(--text2);">Trust: 61.2 ↓↓</span></div>
+                <div class="churn-bar"><div class="cb-fill pf-red" style="width:87%;"></div></div>
+              </div>
+              <div style="font-size:.62rem;color:var(--red);font-family:'DM Mono',monospace;flex-shrink:0;">87% churn</div>
+            </div>
+
+            <div class="esc-item critical">
+              <div class="esc-icon">🔴</div>
+              <div class="esc-body">
+                <div class="esc-name">GlobalTech Ltd — Enterprise (EU)</div>
+                <div class="esc-detail">Product outage impact · SLA breach · Leadership complaint received</div>
+                <div class="esc-meta"><div class="badge b-red">Critical</div><div class="badge b-purple">$240K ARR</div><span style="font-size:.58rem;color:var(--text2);">Trust: 54.8 ↓↓</span></div>
+                <div class="churn-bar"><div class="cb-fill pf-red" style="width:79%;"></div></div>
+              </div>
+              <div style="font-size:.62rem;color:var(--red);font-family:'DM Mono',monospace;flex-shrink:0;">79% churn</div>
+            </div>
+
+            <div class="esc-item warning">
+              <div class="esc-icon">🟡</div>
+              <div class="esc-body">
+                <div class="esc-name">NovaSystems — Mid-Market (NA)</div>
+                <div class="esc-detail">Onboarding delays · Feature adoption below threshold · Risk of non-renewal</div>
+                <div class="esc-meta"><div class="badge b-amber">Warning</div><div class="badge b-blue">$42K ARR</div><span style="font-size:.58rem;color:var(--text2);">Trust: 71.3 ↓</span></div>
+                <div class="churn-bar"><div class="cb-fill pf-amber" style="width:54%;"></div></div>
+              </div>
+              <div style="font-size:.62rem;color:var(--amber);font-family:'DM Mono',monospace;flex-shrink:0;">54% churn</div>
+            </div>
+
+            <div class="esc-item warning">
+              <div class="esc-icon">🟡</div>
+              <div class="esc-body">
+                <div class="esc-name">PeakRetail Inc — SMB (LATAM)</div>
+                <div class="esc-detail">Pricing concern raised · Competitor evaluation · QBR missed</div>
+                <div class="esc-meta"><div class="badge b-amber">Warning</div><div class="badge b-blue">$18K ARR</div><span style="font-size:.58rem;color:var(--text2);">Trust: 68.9 ↓</span></div>
+                <div class="churn-bar"><div class="cb-fill pf-amber" style="width:48%;"></div></div>
+              </div>
+              <div style="font-size:.62rem;color:var(--amber);font-family:'DM Mono',monospace;flex-shrink:0;">48% churn</div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.8rem;">
+            <div class="card card-sm">
+              <div class="sh"><div class="st"><div class="accent-bar"></div>Churn Radar</div></div>
+              <canvas id="churnRadar" height="180"></canvas>
+            </div>
+            <div class="card card-sm">
+              <div class="kpi-label" style="margin-bottom:.6rem;">Trust Degradation Signals</div>
+              <div style="display:flex;flex-direction:column;gap:.4rem;font-size:.7rem;">
+                <div style="display:flex;justify-content:space-between;"><span>Ticket re-openings ↑</span><span style="color:var(--red);">+34%</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>NPS detractor rate</span><span style="color:var(--red);">18%</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>Login frequency ↓</span><span style="color:var(--amber);">-22%</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>Feature usage ↓</span><span style="color:var(--amber);">-15%</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>Support escalations</span><span style="color:var(--red);">7 open</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: COPILOT ═══════════════ -->
+      <div class="view" id="v-copilot">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">AI <span style="background:linear-gradient(90deg,var(--violet),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Copilot Panel</span></div>
+          <div class="page-sub">Intelligent recommendations · real-time operational awareness · predictive intelligence</div>
+        </div>
+
+        <div class="g12" style="margin-bottom:1rem;">
+          <div class="card" style="background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(0,212,170,.03));border-color:rgba(139,92,246,.25);">
+            <div class="sh">
+              <div class="st"><span>✦</span> AI Copilot — Live Intelligence Stream</div>
+              <div class="sa">
+                <div class="badge b-purple"><span class="dp dp2"></span> Active</div>
+                <button class="tbtn ai-btn" onclick="runAICopilot()" style="font-size:.62rem;padding:4px 10px;">⟳ Refresh</button>
+              </div>
+            </div>
+            <div id="copilotFeed" style="display:flex;flex-direction:column;gap:.7rem;">
+              <div class="ai-insight">
+                <div class="ai-insight-head"><div class="ai-tag ai-tag-crit">🔴 Critical Action</div><span style="font-size:.6rem;color:var(--text2);">2 minutes ago</span></div>
+                <div class="ai-text"><strong>Prioritize enterprise onboarding tickets in APAC immediately.</strong> 3 enterprise accounts in APAC showing combined churn probability of 78%. Unresolved onboarding blockers are the primary driver. Recommend: dedicated CSM call within 4 hours.</div>
+              </div>
+              <div class="ai-insight">
+                <div class="ai-insight-head"><div class="ai-tag ai-tag-warn">🟡 Frustration Spike</div><span style="font-size:.6rem;color:var(--text2);">8 minutes ago</span></div>
+                <div class="ai-text"><strong>Detected frustration spike linked to delayed shipments.</strong> Negative sentiment increased 18% across 73 customers in APAC. Root cause: logistics partner delay. Recommend: proactive outreach email template + SLA credit offer for affected accounts.</div>
+              </div>
+              <div class="ai-insight">
+                <div class="ai-insight-head"><div class="ai-tag ai-tag-ai">🔮 Predictive</div><span style="font-size:.6rem;color:var(--text2);">15 minutes ago</span></div>
+                <div class="ai-text"><strong>Predicted churn increase among high-value accounts.</strong> Based on 90-day behavioral pattern analysis, 12 enterprise accounts ($2.4M ARR) show early churn signals. Intervention success probability: 73% if contacted within 48 hours.</div>
+              </div>
+              <div class="ai-insight">
+                <div class="ai-insight-head"><div class="ai-tag ai-tag-info">💡 Optimization</div><span style="font-size:.6rem;color:var(--text2);">22 minutes ago</span></div>
+                <div class="ai-text"><strong>Recommend reallocating 4 support agents from email to live chat.</strong> Live chat at 94% capacity with 234 customers waiting. Email queue at 68% and can absorb load. Estimated SLA improvement: 34% for chat channel.</div>
+              </div>
+              <div class="ai-insight">
+                <div class="ai-insight-head"><div class="ai-tag ai-tag-info">📊 Revenue Insight</div><span style="font-size:.6rem;color:var(--text2);">31 minutes ago</span></div>
+                <div class="ai-text"><strong>Proactive retention intervention opportunity worth $1.2M ARR.</strong> 47 at-risk accounts identified. NPS detractors in this cohort respond 3× better to video calls vs email. Optimal outreach window: Tuesday–Thursday, 10am–2pm local time.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.8rem;">
+            <div class="card card-sm" style="background:linear-gradient(135deg,rgba(124,58,237,.06),transparent);border-color:rgba(139,92,246,.2);">
+              <div class="kpi-label" style="margin-bottom:.8rem;">AI Confidence Scores</div>
+              <div style="display:flex;flex-direction:column;gap:.6rem;">
+                <div><div style="display:flex;justify-content:space-between;font-size:.65rem;margin-bottom:.3rem;"><span>Churn Prediction</span><span class="mono" style="color:var(--purple);">94.2%</span></div><div class="progress-wrap"><div class="progress-fill pf-purple" style="width:94%"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:.65rem;margin-bottom:.3rem;"><span>Sentiment Analysis</span><span class="mono" style="color:var(--purple);">91.7%</span></div><div class="progress-wrap"><div class="progress-fill pf-purple" style="width:92%"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:.65rem;margin-bottom:.3rem;"><span>Anomaly Detection</span><span class="mono" style="color:var(--purple);">88.4%</span></div><div class="progress-wrap"><div class="progress-fill pf-purple" style="width:88%"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:.65rem;margin-bottom:.3rem;"><span>Revenue Forecast</span><span class="mono" style="color:var(--purple);">86.1%</span></div><div class="progress-wrap"><div class="progress-fill pf-purple" style="width:86%"></div></div></div>
+              </div>
+            </div>
+            <div class="card card-sm">
+              <div class="kpi-label" style="margin-bottom:.6rem;">Actions Recommended Today</div>
+              <div class="kpi-hero kpi-purple" style="font-size:2rem;margin-bottom:.2rem;">23</div>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem;">
+                <div class="badge b-red">6 Critical</div>
+                <div class="badge b-amber">9 Warning</div>
+                <div class="badge b-blue">8 Optimize</div>
+              </div>
+            </div>
+            <div class="card card-sm">
+              <div class="kpi-label" style="margin-bottom:.6rem;">AI Model Status</div>
+              <div class="metric-row"><div class="mr-name">Churn Predictor v3</div><div class="badge b-teal">Active</div></div>
+              <div class="metric-row"><div class="mr-name">Sentiment Engine v5</div><div class="badge b-teal">Active</div></div>
+              <div class="metric-row"><div class="mr-name">Anomaly Detector</div><div class="badge b-teal">Active</div></div>
+              <div class="metric-row"><div class="mr-name">Journey Forecaster</div><div class="badge b-amber">Training</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ VIEW: SIMULATION ═══════════════ -->
+      <div class="view" id="v-simulation">
+        <div style="margin-bottom:1.5rem;">
+          <div class="page-title syne">Journey <span style="background:linear-gradient(90deg,var(--teal),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Simulation Lab</span></div>
+          <div class="page-sub">Predictive scenario modeling · AI simulation outputs · impact forecasting</div>
+        </div>
+
+        <div class="g2" style="margin-bottom:1rem;">
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Scenario Parameters</div><div class="badge b-teal">✦ AI Powered</div></div>
+            <div style="display:flex;flex-direction:column;gap:1.2rem;margin-top:.5rem;">
+              <div class="sim-slider-wrap">
+                <div class="sim-label"><span>Response Time Increase</span><span id="rtLabel">+0%</span></div>
+                <input type="range" min="0" max="200" value="0" oninput="updateSim()" id="rtSlider">
+              </div>
+              <div class="sim-slider-wrap">
+                <div class="sim-label"><span>Support Volume Spike</span><span id="svLabel">+0%</span></div>
+                <input type="range" min="0" max="300" value="0" oninput="updateSim()" id="svSlider">
+              </div>
+              <div class="sim-slider-wrap">
+                <div class="sim-label"><span>Agent Headcount Reduction</span><span id="ahLabel">-0%</span></div>
+                <input type="range" min="0" max="80" value="0" oninput="updateSim()" id="ahSlider">
+              </div>
+              <div class="sim-slider-wrap">
+                <div class="sim-label"><span>CSAT Target Drop</span><span id="csLabel">-0 pts</span></div>
+                <input type="range" min="0" max="20" value="0" oninput="updateSim()" id="csSlider">
+              </div>
+              <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+                <button class="tbtn" onclick="simScenario('outage')">📡 Simulate Outage</button>
+                <button class="tbtn" onclick="simScenario('surge')">📈 Holiday Surge</button>
+                <button class="tbtn" onclick="simScenario('churn')">⚠ Churn Crisis</button>
+                <button class="tbtn acc" onclick="resetSim()">↺ Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="sh"><div class="st"><div class="accent-bar"></div>Predicted Impact</div><div class="badge b-purple" id="simSeverity">Baseline</div></div>
+            <div class="sim-output">
+              <div class="sim-metric"><div class="sm-name">Churn Rate Increase</div><div class="sm-delta sm-neg" id="simChurn">+0.0%</div></div>
+              <div class="sim-metric"><div class="sm-name">CSAT Impact</div><div class="sm-delta sm-neg" id="simCsat">-0.0 pts</div></div>
+              <div class="sim-metric"><div class="sm-name">SLA Compliance Drop</div><div class="sm-delta sm-neg" id="simSla">-0.0%</div></div>
+              <div class="sim-metric"><div class="sm-name">Support Overload Index</div><div class="sm-delta sm-neg" id="simOverload">0.0x</div></div>
+              <div class="sim-metric"><div class="sm-name">Retention Decline</div><div class="sm-delta sm-neg" id="simRetention">-0.0%</div></div>
+              <div class="sim-metric"><div class="sm-name">ARR at Risk</div><div class="sm-delta sm-neg" id="simArr">$0</div></div>
+            </div>
+            <div style="margin-top:.8rem;padding:.8rem;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:12px;">
+              <div style="font-size:.65rem;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">✦ AI Recommendation</div>
+              <div style="font-size:.72rem;color:var(--text2);line-height:1.6;" id="simRec">Adjust sliders or select a scenario to run the AI simulation.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sh"><div class="st"><div class="accent-bar"></div>Simulation Forecast Chart</div><div class="badge b-teal">30-Day Projection</div></div>
+          <canvas id="simChart" height="140"></canvas>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main-wrap -->
+</div><!-- end app -->
+
+<script>
+// ══════════════════════════════════════
+// PRELOADER
+// ══════════════════════════════════════
+const statuses = [
+  'Initializing trust intelligence engines…',
+  'Connecting sentiment analysis streams…',
+  'Loading customer behavioral models…',
+  'Calibrating churn prediction AI…',
+  'Establishing omni-channel data feeds…',
+  'Synchronizing global health map…',
+  'Activating AI Copilot subsystems…',
+  'Platform ready.'
+];
+let pct = 0;
+const bar = document.getElementById('preBar');
+const statusEl = document.getElementById('preStatus');
+const preInterval = setInterval(() => {
+  pct += Math.random() * 8 + 3;
+  if (pct > 100) pct = 100;
+  bar.style.width = pct + '%';
+  statusEl.textContent = statuses[Math.min(Math.floor(pct/14), statuses.length-1)];
+  if (pct >= 100) {
+    clearInterval(preInterval);
+    setTimeout(() => {
+      document.getElementById('preloader').style.transition = 'opacity .6s';
+      document.getElementById('preloader').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('preloader').style.display = 'none';
+        document.getElementById('app').style.transition = 'opacity .5s';
+        document.getElementById('app').style.opacity = '1';
+        initAll();
+      }, 600);
+    }, 400);
+  }
+}, 60);
+
+// ══════════════════════════════════════
+// BACKGROUND CANVAS
+// ══════════════════════════════════════
+function initBg() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const particles = Array.from({length:60}, () => ({
+    x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+    vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3,
+    r: Math.random()*1.5+.5, o: Math.random()*.4+.1
+  }));
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // Grid
+    ctx.strokeStyle = 'rgba(0,212,170,0.03)';
+    ctx.lineWidth = 1;
+    for(let x=0;x<canvas.width;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+    for(let y=0;y<canvas.height;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+    // Particles
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+      if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(0,212,170,${p.o})`;
+      ctx.fill();
+    });
+    // Connect nearby
+    particles.forEach((a,i) => {
+      particles.slice(i+1).forEach(b => {
+        const d = Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<120){ctx.strokeStyle=`rgba(0,212,170,${0.06*(1-d/120)})`;ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ══════════════════════════════════════
+// CURSOR GLOW
+// ══════════════════════════════════════
+document.addEventListener('mousemove', e => {
+  const g = document.getElementById('cursorGlow');
+  g.style.left = e.clientX + 'px';
+  g.style.top = e.clientY + 'px';
+});
+
+// ══════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════
+function updateClock() {
+  document.getElementById('topClock').textContent = new Date().toLocaleTimeString('en-US', {hour12:false});
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function nav(page, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+  const view = document.getElementById('v-'+page);
+  if(view) view.classList.add('on');
+  if(el) el.classList.add('on');
+  const titles = {command:'Trust Command Center',sentiment:'Sentiment Intelligence Engine',omni:'Omni-Channel Operations',lifecycle:'Lifecycle Intelligence',map:'Global Health Map',escalation:'Escalation & Churn Center',copilot:'AI Copilot Panel',simulation:'Journey Simulation Lab'};
+  document.getElementById('tbTitle').textContent = titles[page] || page;
+  if(page === 'simulation') initSimChart();
+}
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mini');
+}
+
+// ══════════════════════════════════════
+// LIVE FEED
+// ══════════════════════════════════════
+const feedEvents = [
+  {icon:'🟢',text:'Account <strong>Stripe Inc</strong> trust score improved to 97.4',time:'just now',color:'var(--green)'},
+  {icon:'🔴',text:'Escalation opened: <strong>Acme Corp</strong> billing dispute — APAC',time:'2m ago',color:'var(--red)'},
+  {icon:'🟡',text:'Sentiment spike detected — 34 tickets with frustration tone',time:'4m ago',color:'var(--amber)'},
+  {icon:'🤖',text:'AI deflected 847 tickets via chatbot — 74% success rate',time:'6m ago',color:'var(--purple)'},
+  {icon:'📊',text:'NPS survey response received: Detractor from <strong>GlobalTech</strong>',time:'9m ago',color:'var(--red)'},
+  {icon:'🟢',text:'SLA compliance restored to 98.4% after agent reallocation',time:'12m ago',color:'var(--green)'},
+  {icon:'🔔',text:'Churn risk alert: <strong>47 accounts</strong> entered high-risk zone',time:'15m ago',color:'var(--amber)'},
+  {icon:'🌐',text:'APAC sentiment score dropped to 78.4 — monitoring active',time:'18m ago',color:'var(--red)'},
+];
+function renderFeed() {
+  const feed = document.getElementById('liveFeed');
+  if(!feed) return;
+  feed.innerHTML = feedEvents.map(e => `
+    <div style="display:flex;gap:.6rem;align-items:flex-start;padding:.5rem;border-radius:8px;background:rgba(255,255,255,.015);border:1px solid var(--border);transition:all .2s;">
+      <div style="font-size:.9rem;flex-shrink:0;margin-top:1px;">${e.icon}</div>
+      <div style="flex:1;">
+        <div style="font-size:.7rem;line-height:1.5;color:var(--text3);">${e.text}</div>
+        <div style="font-size:.58rem;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace;">${e.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { backgroundColor:'rgba(10,15,25,0.95)',borderColor:'rgba(0,212,170,0.2)',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,cornerRadius:8 }},
+  scales: { x: { grid:{color:'rgba(255,255,255,0.03)'}, ticks:{color:'#475569',font:{size:10,family:'DM Mono'}} }, y: { grid:{color:'rgba(255,255,255,0.03)'}, ticks:{color:'#475569',font:{size:10,family:'DM Mono'}} } }
+};
+
+function initCharts() {
+  // Sentiment Pulse
+  const sp = document.getElementById('sentimentPulse');
+  if(sp) {
+    const labels = Array.from({length:24}, (_,i) => i%6===0 ? `${i}:00`:'');
+    const data = [72,74,71,73,76,75,74,78,80,79,77,75,73,74,76,79,82,81,80,78,77,79,81,80];
+    new Chart(sp, {type:'line',data:{labels,datasets:[{data,borderColor:'#00d4aa',backgroundColor:'rgba(0,212,170,0.08)',borderWidth:2,fill:true,tension:.4,pointRadius:0,pointHoverRadius:4}]},options:{...chartDefaults,scales:{x:{...chartDefaults.scales.x},y:{...chartDefaults.scales.y,min:60,max:100}}}});
+  }
+
+  // Churn Trend
+  const ct = document.getElementById('churnTrend');
+  if(ct) {
+    const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    new Chart(ct, {type:'bar',data:{labels,datasets:[{data:[5.2,5.4,6.1,5.8,6.4,6.7,6.8],backgroundColor:['rgba(239,68,68,.5)','rgba(239,68,68,.5)','rgba(239,68,68,.6)','rgba(239,68,68,.55)','rgba(239,68,68,.65)','rgba(239,68,68,.75)','rgba(239,68,68,.85)'],borderColor:'rgba(239,68,68,.8)',borderWidth:1,borderRadius:4}]},options:{...chartDefaults,scales:{x:{...chartDefaults.scales.x},y:{...chartDefaults.scales.y,min:4,max:8}}}});
+  }
+
+  // Emotion Trend
+  const et = document.getElementById('emotionTrend');
+  if(et) {
+    const labels = Array.from({length:30}, (_,i) => i%5===0 ? `Day ${i+1}`:'');
+    new Chart(et, {type:'line',data:{labels,datasets:[
+      {label:'Positive',data:Array.from({length:30},(_,i)=>62+Math.sin(i*.3)*8+Math.random()*4),borderColor:'#00d4aa',backgroundColor:'rgba(0,212,170,.06)',borderWidth:2,fill:true,tension:.4,pointRadius:0},
+      {label:'Negative',data:Array.from({length:30},(_,i)=>12+Math.cos(i*.25)*4+Math.random()*3),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.06)',borderWidth:2,fill:true,tension:.4,pointRadius:0},
+      {label:'Neutral',data:Array.from({length:30},(_,i)=>22+Math.sin(i*.15)*3+Math.random()*2),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.04)',borderWidth:1.5,fill:true,tension:.4,pointRadius:0}
+    ]},options:{...chartDefaults,plugins:{...chartDefaults.plugins,legend:{display:true,labels:{color:'#94a3b8',font:{size:10}}}}}});
+  }
+
+  // Sentiment by Channel
+  const sc = document.getElementById('sentimentChannel');
+  if(sc) {
+    new Chart(sc, {type:'doughnut',data:{labels:['Email','Chat','Voice','Social','AI Bot'],datasets:[{data:[72,61,84,54,78],backgroundColor:['rgba(59,130,246,.7)','rgba(239,68,68,.7)','rgba(0,212,170,.7)','rgba(245,158,11,.7)','rgba(139,92,246,.7)'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}},tooltip:{backgroundColor:'rgba(10,15,25,0.95)',borderColor:'rgba(0,212,170,0.2)',borderWidth:1}},cutout:'65%'}});
+  }
+
+  // Queue Volume
+  const qv = document.getElementById('queueVolume');
+  if(qv) {
+    const labels = ['8am','10am','12pm','2pm','4pm','Now'];
+    new Chart(qv, {type:'line',data:{labels,datasets:[
+      {label:'Chat',data:[80,120,180,210,234,234],borderColor:'#ef4444',borderWidth:2,tension:.4,pointRadius:3,fill:false},
+      {label:'Email',data:[600,720,800,780,820,847],borderColor:'#3b82f6',borderWidth:2,tension:.4,pointRadius:3,fill:false},
+      {label:'Voice',data:[20,35,50,42,47,47],borderColor:'#00d4aa',borderWidth:2,tension:.4,pointRadius:3,fill:false}
+    ]},options:{...chartDefaults,plugins:{...chartDefaults.plugins,legend:{display:true,labels:{color:'#94a3b8',font:{size:10}}}}}});
+  }
+
+  // Agent Load
+  const al = document.getElementById('agentLoad');
+  if(al) {
+    new Chart(al, {type:'bar',data:{labels:['Email Team','Chat Team','Voice Team','Social Team'],datasets:[{label:'Utilized',data:[68,94,52,79],backgroundColor:['rgba(59,130,246,.6)','rgba(239,68,68,.7)','rgba(0,212,170,.6)','rgba(245,158,11,.6)'],borderRadius:6},{label:'Available',data:[32,6,48,21],backgroundColor:'rgba(255,255,255,.05)',borderRadius:6}]},options:{...chartDefaults,indexAxis:'y',plugins:{...chartDefaults.plugins,legend:{display:true,labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{...chartDefaults.scales.x,stacked:true,max:100},y:{...chartDefaults.scales.y,stacked:true}}}});
+  }
+
+  // Lifecycle Chart
+  const lc = document.getElementById('lifecycleChart');
+  if(lc) {
+    new Chart(lc, {type:'line',data:{labels:['Lead','Onboard','Usage','Support','Satisfaction','Retention','Expansion'],datasets:[{label:'Trust Score',data:[55,88,93,74,94,91,78],borderColor:'#00d4aa',backgroundColor:'rgba(0,212,170,.08)',borderWidth:2.5,fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#00d4aa',pointBorderColor:'#000',pointBorderWidth:2}]},options:{...chartDefaults,scales:{x:{...chartDefaults.scales.x},y:{...chartDefaults.scales.y,min:40,max:100}}}});
+  }
+
+  // Churn Radar
+  const cr = document.getElementById('churnRadar');
+  if(cr) {
+    new Chart(cr, {type:'radar',data:{labels:['Ticket Reopen','Login Drop','Feature Drop','NPS Score','Response Lag','Payment Risk'],datasets:[{label:'Current Risk',data:[87,78,62,71,89,54],backgroundColor:'rgba(239,68,68,.15)',borderColor:'rgba(239,68,68,.6)',borderWidth:2,pointBackgroundColor:'#ef4444'},{label:'Baseline',data:[20,15,20,25,20,10],backgroundColor:'rgba(0,212,170,.05)',borderColor:'rgba(0,212,170,.3)',borderWidth:1,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#94a3b8',font:{size:9}}}},scales:{r:{grid:{color:'rgba(255,255,255,0.06)'},ticks:{display:false},pointLabels:{color:'#94a3b8',font:{size:9}},angleLines:{color:'rgba(255,255,255,0.04)'}}}}});
+  }
+}
+
+// ══════════════════════════════════════
+// WAVEFORM ANIMATION
+// ══════════════════════════════════════
+function initWaveform() {
+  const canvas = document.getElementById('waveformCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let t = 0;
+  function draw() {
+    const W = canvas.offsetWidth; const H = canvas.offsetHeight;
+    canvas.width = W; canvas.height = H;
+    ctx.clearRect(0,0,W,H);
+    // Draw multiple sentiment waves
+    const waves = [
+      {color:'rgba(0,212,170,0.7)',amp:18,freq:.04,phase:0,offset:H*.4},
+      {color:'rgba(239,68,68,0.4)',amp:10,freq:.07,phase:1.5,offset:H*.5},
+      {color:'rgba(139,92,246,0.3)',amp:7,freq:.03,phase:.8,offset:H*.45}
+    ];
+    waves.forEach(w => {
+      ctx.beginPath();
+      for(let x=0;x<W;x++){
+        const y = w.offset + w.amp * Math.sin(x*w.freq + t + w.phase) + (w.amp*.4)*Math.sin(x*.11+t*.7+w.phase);
+        x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle = w.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+    t += 0.025;
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ══════════════════════════════════════
+// SIMULATION
+// ══════════════════════════════════════
+let simChartInst = null;
+function initSimChart() {
+  const el = document.getElementById('simChart');
+  if(!el) return;
+  if(simChartInst) simChartInst.destroy();
+  const labels = Array.from({length:30}, (_,i) => `Day ${i+1}`);
+  simChartInst = new Chart(el, {type:'line',data:{labels,datasets:[
+    {label:'Baseline Churn%',data:Array.from({length:30},()=>6.8),borderColor:'rgba(0,212,170,.5)',borderWidth:1.5,borderDash:[4,4],fill:false,pointRadius:0},
+    {label:'Simulated Churn%',data:Array.from({length:30},(_,i)=>6.8),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.06)',borderWidth:2,fill:true,tension:.4,pointRadius:0}
+  ]},options:{...chartDefaults,plugins:{...chartDefaults.plugins,legend:{display:true,labels:{color:'#94a3b8',font:{size:10}}}}}});
+}
+function updateSim() {
+  const rt = +document.getElementById('rtSlider').value;
+  const sv = +document.getElementById('svSlider').value;
+  const ah = +document.getElementById('ahSlider').value;
+  const cs = +document.getElementById('csSlider').value;
+  document.getElementById('rtLabel').textContent = `+${rt}%`;
+  document.getElementById('svLabel').textContent = `+${sv}%`;
+  document.getElementById('ahLabel').textContent = `-${ah}%`;
+  document.getElementById('csLabel').textContent = `-${cs} pts`;
+  const severity = rt+sv/2+ah*1.5+cs*2;
+  const churnDelta = (rt*.03+sv*.02+ah*.05+cs*.08).toFixed(1);
+  const csatDelta = (rt*.01+sv*.008+ah*.02+cs*.12).toFixed(1);
+  const slaDelta = (rt*.08+sv*.06+ah*.12+cs*.02).toFixed(1);
+  const overload = (1+sv*.008+ah*.01).toFixed(1);
+  const retDelta = (rt*.02+sv*.015+ah*.03+cs*.05).toFixed(1);
+  const arr = Math.round((+churnDelta/100)*35000000);
+  document.getElementById('simChurn').textContent = `+${churnDelta}%`;
+  document.getElementById('simCsat').textContent = `-${csatDelta} pts`;
+  document.getElementById('simSla').textContent = `-${slaDelta}%`;
+  document.getElementById('simOverload').textContent = `${overload}x`;
+  document.getElementById('simRetention').textContent = `-${retDelta}%`;
+  document.getElementById('simArr').textContent = `$${(arr/1000).toFixed(0)}K`;
+  const sev = document.getElementById('simSeverity');
+  if(severity > 100){sev.className='badge b-red';sev.textContent='Critical Impact';}
+  else if(severity > 40){sev.className='badge b-amber';sev.textContent='Moderate Risk';}
+  else{sev.className='badge b-teal';sev.textContent='Low Impact';}
+  const recs = severity > 100
+    ? 'This scenario creates critical operational failure. Immediately pre-hire contractors, activate emergency SLA protocols, and notify enterprise accounts.'
+    : severity > 40
+    ? 'Moderate risk detected. Recommend: pre-approve overtime, activate chatbot surge mode, and prepare proactive customer comms.'
+    : 'Scenario within manageable parameters. Continue monitoring and maintain current staffing levels.';
+  document.getElementById('simRec').textContent = recs;
+  if(simChartInst) {
+    const base = 6.8;
+    simChartInst.data.datasets[1].data = Array.from({length:30},(_,i) => +(base + (+churnDelta)*(i/30)).toFixed(2));
+    simChartInst.update('none');
+  }
+}
+function simScenario(type) {
+  const scenarios = {
+    outage: [80,200,20,5],
+    surge: [40,250,0,8],
+    churn: [60,100,30,12]
+  };
+  const [rt,sv,ah,cs] = scenarios[type];
+  document.getElementById('rtSlider').value=rt;
+  document.getElementById('svSlider').value=sv;
+  document.getElementById('ahSlider').value=ah;
+  document.getElementById('csSlider').value=cs;
+  updateSim();
+  toast(`Scenario "${type}" loaded ✓`, 'ok');
+}
+function resetSim() {
+  ['rtSlider','svSlider','ahSlider','csSlider'].forEach(id => document.getElementById(id).value=0);
+  updateSim();
+  toast('Simulation reset to baseline', 'info');
+}
+
+// ══════════════════════════════════════
+// AI COPILOT
+// ══════════════════════════════════════
+function runAICopilot() {
+  nav('copilot', document.querySelector('.nav-item[data-p="copilot"]'));
+  toast('AI Copilot refreshing intelligence stream…', 'ok');
+}
+
+// ══════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════
+function exportReport() {
+  const data = {platform:'APEX CX Intelligence Platform',generated:new Date().toISOString(),trustIndex:94.2,csat:4.7,churnRisk:'6.8%',activeEscalations:3,slaCompliance:'98.4%',retention:'91.2%',arrAtRisk:'$2.4M',regions:{na:96.2,eu:93.1,apac:78.4,latam:84.7,au:91.8}};
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download = `apex-cx-report-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('Report exported ✓', 'ok');
+}
+
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toastWrap');
+  const colors = {ok:'#00d4aa',error:'#ef4444',warn:'#f59e0b',info:'#3b82f6'};
+  const icons = {ok:'✦',error:'✕',warn:'⚠',info:'●'};
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderLeftColor = colors[type]||colors.info;
+  t.innerHTML = `<span style="color:${colors[type]};">${icons[type]}</span><span style="color:rgba(255,255,255,.85);">${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(()=>{t.style.transition='all .3s';t.style.opacity='0';t.style.transform='translateX(16px)';setTimeout(()=>t.remove(),300);},4000);
+}
+
+// ══════════════════════════════════════
+// COUNTER ANIMATION
+// ══════════════════════════════════════
+function animateCounters() {
+  const targets = [{el:'kpi-trust',val:94.2,dec:1}];
+  targets.forEach(({el,val,dec}) => {
+    const elem = document.getElementById(el);
+    if(!elem) return;
+    let cur = 0;
+    const step = val/60;
+    const interval = setInterval(() => {
+      cur = Math.min(cur+step,val);
+      elem.textContent = cur.toFixed(dec);
+      if(cur >= val) clearInterval(interval);
+    }, 16);
+  });
+}
+
+// ══════════════════════════════════════
+// LIVE FEED AUTO-UPDATE
+// ══════════════════════════════════════
+function startLiveFeedPulse() {
+  const newEvents = [
+    {icon:'🟢',text:'<strong>TechStart EU</strong> NPS score improved from 32 to 58',time:'just now',color:'var(--green)'},
+    {icon:'🤖',text:'AI deflected 120 tickets in last 15 minutes — 78% success',time:'just now',color:'var(--purple)'},
+    {icon:'🔔',text:'Proactive outreach sent to <strong>23 at-risk APAC accounts</strong>',time:'just now',color:'var(--amber)'},
+  ];
+  let i = 0;
+  setInterval(() => {
+    feedEvents.unshift(newEvents[i % newEvents.length]);
+    feedEvents.splice(8,1);
+    renderFeed();
+    i++;
+  }, 12000);
+}
+
+// ══════════════════════════════════════
+// INIT ALL
+// ══════════════════════════════════════
+function initAll() {
+  initBg();
+  initCharts();
+  initWaveform();
+  renderFeed();
+  startLiveFeedPulse();
+  animateCounters();
+  setInterval(updateClock, 1000);
+  updateClock();
+  toast('APEX CX Platform online · All systems nominal', 'ok');
+  setTimeout(()=>toast('3 active escalations require attention','warn'),2000);
+  setTimeout(()=>toast('AI detected frustration spike — APAC region','error'),4500);
+}
+</script>
+</body>
+</html>
